@@ -11,6 +11,8 @@ use Drupal\Core\Field\FormatterInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 
 /**
  * Implements hook_help().
@@ -156,7 +158,7 @@ function fico_field_formatter_settings_summary_alter(&$summary, $context) {
 /**
  * Implements hook_entity_view_alter().
  */
-function fico_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+function fico_entity_view_alter(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display) {
   $components = $display->getComponents();
   foreach ($components as $field => $component) {
     if (!empty($component['third_party_settings']['fico']['fico']['condition'])) {
@@ -199,6 +201,7 @@ function fico_string_search(&$build, $field, $settings) {
         $options['found'] = TRUE;
       }
     }, $options);
+
     return $found;
   }
 }

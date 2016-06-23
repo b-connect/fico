@@ -40,4 +40,3 @@ Generate a plugin.
       }
 
     }
- 
