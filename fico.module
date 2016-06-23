@@ -196,7 +196,7 @@ function fico_string_search(&$build, $field, $settings) {
       'found' => &$found,
       'string' => $settings['settings']['string'],
     ];
-    array_walk($values, function(&$item, $delta, $options) {
+    array_walk($values, function (&$item, $delta, $options) {
       if (!empty($item['value']) && strpos($item['value'], $options['string']) !== FALSE) {
         $options['found'] = TRUE;
       }
