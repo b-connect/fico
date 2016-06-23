@@ -11,5 +11,4 @@ interface FieldFormatterConditionInterface extends PluginManagerInterface {
 
 
   // Add get/set methods for your plugin type here.
-
 }

@@ -52,7 +52,7 @@ class HideOnPages extends FieldFormatterConditionBase {
     $page_match = \Drupal::service('path.matcher')->matchPath($path, $settings['settings']['pages']);
     $page_match = !($settings['settings']['visibility'] xor $page_match);
     if ($page_match) {
-      $build[$source]['#access'] = FALSE;
+      $build[$field]['#access'] = FALSE;
     }
   }
 

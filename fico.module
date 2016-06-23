@@ -201,11 +201,15 @@ function fico_string_search(&$build, $field, $settings) {
     $target = $build[$settings['settings']['target_field']]['#items'];
     $values = $target->getValue($field);
     $found = FALSE;
-    array_walk($values, function(&$item, $delta, $string) use (&$found) {
-      if (!empty($item['value']) && strpos($item['value'], $string) !== FALSE) {
-        $found = TRUE;
+    $options = [
+      'found' => &$found,
+      'string' => $settings['settings']['string'],
+    ];
+    array_walk($values, function(&$item, $delta, $options) {
+      if (!empty($item['value']) && strpos($item['value'], $options['string']) !== FALSE) {
+        $options['found'] = TRUE;
       }
-    }, $settings['settings']['string']);
+    }, $options);
     return $found;
   }
 }
