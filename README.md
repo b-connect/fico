@@ -2,7 +2,8 @@
 
 ### Adds conditional functionality to fields.
 
-You can create a FieldFormatterConndition on fairly simple manner. Generate a plugin.
+You can create a FieldFormatterConndition on fairly simple manner.
+Generate a plugin.
 
     <?php
     namespace Drupal\your_module\Plugin\Field\FieldFormatter\Condition;
@@ -39,4 +40,4 @@ You can create a FieldFormatterConndition on fairly simple manner. Generate a pl
       }
 
     }
-    
+ 

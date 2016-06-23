@@ -2,7 +2,6 @@
 namespace Drupal\fico\Plugin\Field\FieldFormatter\Condition;
 
 use Drupal\fico\Plugin\FieldFormatterConditionBase;
-use Drupal\Core\Path;
 
 /**
  * The plugin for check empty fields.

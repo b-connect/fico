@@ -32,7 +32,7 @@ class HideDateTime extends FieldFormatterConditionBase {
         'smaller' => t("smaller than today's date"),
         'greater' => t("greater than today's date"),
         'custom_small' => t("smaller then custom date"),
-        'greater_small' => t("greater then custom date")
+        'greater_small' => t("greater then custom date"),
       ),
       '#default_value' => $default_orientation,
     ];

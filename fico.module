@@ -5,7 +5,6 @@
  * Contains fico.module.
  */
 
-use stdClass;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FormatterInterface;
@@ -68,7 +67,7 @@ function fico_field_formatter_third_party_settings_form(FormatterInterface $plug
     '#options' => $conditions,
     '#default_value' => !empty($settings['condition']) ? $settings['condition'] : [],
     '#ajax' => [
-      'callback' => 'ficoAjaxCallback',
+      'callback' => 'fico_ajax_callback',
       'event' => 'change',
       'method' => 'replace',
       'effect' => 'fade',
@@ -95,7 +94,7 @@ function fico_field_formatter_third_party_settings_form(FormatterInterface $plug
 /**
  * AjaxCallback.
  */
-function ficoAjaxCallback(array &$form, FormStateInterface $form_state) {
+function fico_ajax_callback(array &$form, FormStateInterface $form_state) {
   $fico_plugin_manager = Drupal::service('plugin.manager.field_formatter_condition');
   // Load all values.
   $values = $form_state->getValues();
@@ -124,16 +123,6 @@ function ficoAjaxCallback(array &$form, FormStateInterface $form_state) {
         $formElements = $plug['settingsForm'] ? $formatterPlugin->formElements($settings) : '';
       }
     }
-    //
-    //
-    //
-    // // Load field formatter condition plugin instance.
-    // $formatterPlugin = $fico_plugin_manager->createInstance($condition);
-    // // Load form elements from selected field formatter condition.
-    // $formatterPlugin = $fico_plugin_manager->createInstance($plug['id']);
-    // $formElements = $plug['settingsForm'] ? $formatterPlugin->formElements($settings) : [];
-    //
-    // $formElements = $formatterPlugin->formElements($settings);
   }
   else {
     $formElements = '';
