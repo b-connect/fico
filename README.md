@@ -1,6 +1,6 @@
 # Field formatter conditions
 
-## Adds conditional functionality to fields.
+### Adds conditional functionality to fields.
 
 You can create a FieldFormatterConndition on fairly simple manner. Generate a plugin.
 
