@@ -18,8 +18,7 @@ Generate a plugin.
      *   label = @Translation("Your plugin name"),
      *   types = {
      *     "all"
-     *   },
-     *   settingsForm = TRUE
+     *   }
      * )
      */
     class YourConditionName extends FieldFormatterConditionBase {
@@ -27,7 +26,7 @@ Generate a plugin.
       /**
        * {@inheritdoc}
        */
-      public function formElements($settings) {
+      public function alterForm(&$form, $settings) {
         // Define your formular elements here...
       }
 
@@ -37,6 +36,16 @@ Generate a plugin.
       public function access(&$build, $field, $settings) {
         // Define the access here.
         // Restrict Access via: $build[$field]['#access'] = FALSE; .
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      public function summary($settings) {
+        return t("Condition: %condition (%settings)", [
+          "%condition" => t('Your plugin name'),
+          '%settings' => $your_plugin_settings,
+        ]);
       }
 
     }

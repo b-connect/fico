@@ -13,8 +13,7 @@ use Drupal\fico\Plugin\FieldFormatterConditionBase;
  *     "datetime",
  *     "date",
  *     "datestamp"
- *   },
- *   settingsForm = TRUE
+ *   }
  * )
  */
 class HideDateTime extends FieldFormatterConditionBase {
@@ -22,10 +21,10 @@ class HideDateTime extends FieldFormatterConditionBase {
   /**
    * {@inheritdoc}
    */
-  public function formElements($settings) {
+  public function alterForm(&$form, $settings) {
     $default_orientation = isset($settings['settings']['orientation']) ? $settings['settings']['orientation'] : NULL;
     $default_cutom_date = isset($settings['settings']['cutom_date']) ? $settings['settings']['cutom_date'] : NULL;
-    $elements['orientation'] = [
+    $form['orientation'] = [
       '#title' => t('Hide if'),
       '#type' => 'radios',
       '#options' => array(
@@ -36,12 +35,11 @@ class HideDateTime extends FieldFormatterConditionBase {
       ),
       '#default_value' => $default_orientation,
     ];
-    $elements['cutom_date'] = [
+    $form['cutom_date'] = [
       '#title' => t('Cutom date'),
       '#type' => 'date',
       '#default_value' => $default_cutom_date,
     ];
-    return $elements;
   }
 
   /**
@@ -51,7 +49,7 @@ class HideDateTime extends FieldFormatterConditionBase {
     $custom_date = strtotime($settings['settings']['cutom_date']);
     if (!empty($build[$field]['#items'])) {
       foreach ($build[$field]['#items'] as $item) {
-        $info = &$item->getValue($field);
+        $info = $item->getValue($field);
         switch ($settings['settings']['orientation']) {
           case 'smaller':
             if (strtotime($info['value']) < REQUEST_TIME) {
@@ -86,6 +84,31 @@ class HideDateTime extends FieldFormatterConditionBase {
     if (empty($build[$field]['#items'])) {
       $build[$field]['#access'] = FALSE;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function summary($settings) {
+    $orientations = array(
+      'smaller' => t("smaller than today's date"),
+      'greater' => t("greater than today's date"),
+      'custom_small' => t("smaller then custom date"),
+      'greater_small' => t("greater then custom date"),
+    );
+    if (
+      $settings['settings']['orientation'] != 'smaller' &&
+      $settings['settings']['orientation'] != 'greater') {
+      $display_date = ' - ' . $settings['settings']['cutom_date'];
+    }
+    else {
+      $display_date = '';
+    }
+    return t('Condition: %condition (%orientation%date)', [
+      "%condition" => t('Hide date/time'),
+      '%orientation' => $orientations[$settings['settings']['orientation']],
+      '%date' => $display_date,
+    ]);
   }
 
 }

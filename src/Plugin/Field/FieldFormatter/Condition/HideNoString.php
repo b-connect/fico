@@ -2,7 +2,6 @@
 namespace Drupal\fico\Plugin\Field\FieldFormatter\Condition;
 
 use Drupal\fico\Plugin\FieldFormatterConditionBase;
-use Drupal\Core\Field\FieldConfigInterface;
 
 /**
  * The plugin for check empty fields.
@@ -12,8 +11,7 @@ use Drupal\Core\Field\FieldConfigInterface;
  *   label = @Translation("Hide when target field does not contain a string"),
  *   types = {
  *     "all"
- *   },
- *   settingsForm = TRUE
+ *   }
  * )
  */
 class HideNoString extends FieldFormatterConditionBase {
@@ -21,45 +19,30 @@ class HideNoString extends FieldFormatterConditionBase {
   /**
    * {@inheritdoc}
    */
-  public function formElements($settings) {
-    $fields = [];
+  public function alterForm(&$form, $settings) {
     $options = [];
-    $allowed_field_types = [
-      "text",
-      "text_long",
-      "text_with_summary",
-      "string",
-      "list_string",
-      "string_long",
-    ];
-    $entityManager = \Drupal::service('entity.manager');
-    if (!empty($settings['entity_type']) && !empty($settings['bundle'])) {
-      $fields = array_filter(
-        $entityManager->getFieldDefinitions($settings['entity_type'], $settings['bundle']), function ($field_definition) {
-          return $field_definition instanceof FieldConfigInterface;
-        }
-      );
-    }
+    $fields = $this->getEntityFields($settings['entity_type'], $settings['bundle']);
+    $allowed_field_types = fico_text_types();
+
     foreach ($fields as $field_name => $field) {
       if ($field_name != $settings['field_name'] && in_array($field->getType(), $allowed_field_types)) {
-        $options[$field_name] = $field->label();
+        $options[$field_name] = $field->getLabel();
       }
     }
 
     $default_target = isset($settings['settings']['target_field']) ? $settings['settings']['target_field'] : NULL;
-    $default_string = isset($settings['settings']['string']) ? $settings['settings']['string'] : NULL;
-    $elements['target_field'] = [
+    $form['target_field'] = [
       '#type' => 'select',
       '#title' => t('Select target field'),
       '#options' => $options,
       '#default_value' => $default_target,
     ];
-    $elements['string'] = array(
+    $default_string = isset($settings['settings']['string']) ? $settings['settings']['string'] : NULL;
+    $form['string'] = array(
       '#type' => 'textfield',
       '#title' => t('Enter target string'),
       '#default_value' => $default_string,
     );
-    return $elements;
   }
 
   /**
@@ -70,6 +53,27 @@ class HideNoString extends FieldFormatterConditionBase {
     if ($found == FALSE) {
       $build[$field]['#access'] = FALSE;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function summary($settings) {
+    $options = [];
+    $fields = $this->getEntityFields($settings['entity_type'], $settings['bundle']);
+    $allowed_field_types = fico_text_types();
+
+    foreach ($fields as $field_name => $field) {
+      if ($field_name != $settings['field_name'] && in_array($field->getType(), $allowed_field_types)) {
+        $options[$field_name] = $field->label();
+      }
+    }
+
+    return t('Condition: %condition (%field = "%string")', [
+      "%condition" => t('Hide when target field does not contain a string'),
+      '%field' => $options[$settings['settings']['target_field']],
+      '%string' => $settings['settings']['string'],
+    ]);
   }
 
 }

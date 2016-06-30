@@ -12,8 +12,7 @@ use Drupal\user\Entity\Role;
  *   label = @Translation("Hide when current user has role"),
  *   types = {
  *     "all"
- *   },
- *   settingsForm = TRUE
+ *   }
  * )
  */
 class HideOnRole extends FieldFormatterConditionBase {
@@ -21,29 +20,45 @@ class HideOnRole extends FieldFormatterConditionBase {
   /**
    * {@inheritdoc}
    */
-  public function formElements($settings) {
+  public function alterForm(&$form, $settings) {
     $user_roles = [];
     foreach (Role::loadMultiple() as $role) {
       $user_roles[$role->id()] = $role->label();
     }
     $default_roles = isset($settings['settings']['roles']) ? $settings['settings']['roles'] : NULL;
-    $elements['roles'] = array(
+
+    $form['roles'] = array(
       '#type' => 'select',
       '#multiple' => TRUE,
       '#title' => t('Select roles'),
       '#options' => $user_roles,
       '#default_value' => $default_roles,
     );
-    return $elements;
   }
 
   /**
    * {@inheritdoc}
    */
   public function access(&$build, $field, $settings) {
-    if (array_intersect(\Drupal::currentUser()->getRoles(), $settings['settings']['roles']) && \Drupal::currentUser()->Id() != 1) {
+    if (array_intersect(\Drupal::currentUser()->getRoles(), $settings['settings']['roles']) && \Drupal::currentUser()->id() != 1) {
       $build[$field]['#access'] = FALSE;
     };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function summary($settings) {
+    $roles = [];
+    foreach (Role::loadMultiple() as $role) {
+      if (in_array($role->id(), $settings['settings']['roles'])) {
+        $roles[] = $role->label();
+      }
+    }
+    return t("Condition: %condition (%settings)", [
+      "%condition" => t('Hide when current user has role'),
+      '%settings' => implode(', ', $roles),
+    ]);
   }
 
 }

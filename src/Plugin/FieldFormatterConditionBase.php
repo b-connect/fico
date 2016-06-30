@@ -35,6 +35,16 @@ abstract class FieldFormatterConditionBase extends PluginBase implements FieldFo
   public function getInstance(array $options) {}
 
   /**
+   * Alter the condition form.
+   *
+   * @param array $form
+   *   Condition formular.
+   * @param array $settings
+   *   Settings array.
+   */
+  abstract public function alterForm(&$form, $settings);
+
+  /**
    * Access control function.
    *
    * @param array $build
@@ -45,5 +55,47 @@ abstract class FieldFormatterConditionBase extends PluginBase implements FieldFo
    *   The current settings array.
    */
   abstract public function access(&$build, $field, $settings);
+
+  /**
+   * Return the summary string.
+   *
+   * @param array $settings
+   *   The current settings array.
+   */
+  abstract public function summary($settings);
+
+  /**
+   * Load fields from a entity.
+   *
+   * @param string $entity_type
+   *   Type of entity.
+   * @param string $bundle
+   *   Entity bundle.
+   *
+   * @return array
+   *   Returns the field definitions.
+   */
+  protected function getEntityFields($entity_type, $bundle) {
+    $fields = [];
+    $entityManager = \Drupal::service('entity.manager');
+    if (!empty($entity_type) && !empty($bundle)) {
+      $fields = array_filter(
+        $entityManager->getFieldDefinitions($entity_type, $bundle), function ($field_definition) {
+          $class_name = explode("\\", get_class($field_definition));
+          $class_name = array_pop($class_name);
+          $class_names = [
+            'BaseFieldDefinition',
+            'BaseFieldOverride',
+            'FieldConfig',
+          ];
+          if (in_array($class_name, $class_names)) {
+            return TRUE;
+          }
+        }
+      );
+    }
+
+    return $fields;
+  }
 
 }

@@ -11,8 +11,7 @@ use Drupal\fico\Plugin\FieldFormatterConditionBase;
  *   label = @Translation("Hide on specific pages"),
  *   types = {
  *     "all"
- *   },
- *   settingsForm = TRUE
+ *   }
  * )
  */
 class HideOnPages extends FieldFormatterConditionBase {
@@ -20,10 +19,11 @@ class HideOnPages extends FieldFormatterConditionBase {
   /**
    * {@inheritdoc}
    */
-  public function formElements($settings) {
+  public function alterForm(&$form, $settings) {
     $default_visibility = isset($settings['settings']['visibility']) ? $settings['settings']['visibility'] : 0;
     $default_pages = isset($settings['settings']['pages']) ? $settings['settings']['pages'] : '';
-    $elements['visibility'] = array(
+    $form['visibility'] = array(
+      '#title' => t('Type of display'),
       '#type' => 'radios',
       '#options' => array(
         0 => t('All pages except those listed'),
@@ -32,14 +32,13 @@ class HideOnPages extends FieldFormatterConditionBase {
       '#default_value' => $default_visibility,
     );
 
-    $elements['pages'] = array(
+    $form['pages'] = array(
       '#type' => 'textarea',
       '#title' => t('Enter pages'),
       '#cols' => 10,
       '#default_value' => $default_pages,
       '#description' => t("Specify pages by using their paths. Enter one path per line. * is used as wildcard."),
     );
-    return $elements;
   }
 
   /**
@@ -53,6 +52,18 @@ class HideOnPages extends FieldFormatterConditionBase {
     if ($page_match) {
       $build[$field]['#access'] = FALSE;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function summary($settings) {
+    $pages = explode("\n", $settings['settings']['pages']);
+    return t("Condition: %condition - %visibility (%settings)", [
+      "%condition" => t('Hide on specific pages'),
+      "%visibility" => $settings['settings']['visibility'] == 1 ? t('Only the listed pages') : t('All pages except those listed'),
+      "%settings" => implode(', ', $pages),
+    ]);
   }
 
 }

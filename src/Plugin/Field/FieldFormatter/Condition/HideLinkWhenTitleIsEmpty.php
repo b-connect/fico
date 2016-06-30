@@ -12,8 +12,7 @@ use Drupal\fico\Plugin\FieldFormatterConditionBase;
  *   types = {
  *     "link_field",
  *     "link"
- *   },
- *   settingsForm = FALSE
+ *   }
  * )
  */
 class HideLinkWhenTitleIsEmpty extends FieldFormatterConditionBase {
@@ -21,10 +20,15 @@ class HideLinkWhenTitleIsEmpty extends FieldFormatterConditionBase {
   /**
    * {@inheritdoc}
    */
+  public function alterForm(&$form, $settings) {}
+
+  /**
+   * {@inheritdoc}
+   */
   public function access(&$build, $field, $settings) {
     if (!empty($build[$field]['#items'])) {
-      foreach ($build[$field]['#items'] as &$item) {
-        $info = &$item->getValue($field);
+      foreach ($build[$field]['#items'] as $item) {
+        $info = $item->getValue($field);
         if (!$info['title'] || $info['title'] === $info['uri']) {
           $build[$field]['#access'] = FALSE;
         }
@@ -34,6 +38,15 @@ class HideLinkWhenTitleIsEmpty extends FieldFormatterConditionBase {
     if (empty($build[$field]['#items'])) {
       $build[$field]['#access'] = FALSE;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function summary($settings) {
+    return t('Condition: %condition', [
+      "%condition" => t('Hide link when link title is empty'),
+    ]);
   }
 
 }

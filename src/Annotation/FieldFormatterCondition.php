@@ -35,11 +35,4 @@ class FieldFormatterCondition extends Plugin {
    */
   public $types;
 
-  /**
-   * This field formatter condition is is use a settings form.
-   *
-   * @var bool
-   */
-  public $settingsForm;
-
 }

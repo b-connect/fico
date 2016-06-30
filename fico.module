@@ -9,8 +9,6 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FormatterInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 
@@ -33,111 +31,97 @@ function fico_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_field_formatter_third_party_settings_form().
  */
 function fico_field_formatter_third_party_settings_form(FormatterInterface $plugin, FieldDefinitionInterface $field_definition, $view_mode, $form, FormStateInterface $form_state) {
-  $element = [];
-  $conditions = [];
-  $formElements = [];
-
-  $fico_plugin_manager = Drupal::service('plugin.manager.field_formatter_condition');
-  $settings = $plugin->getThirdPartySetting('fico', 'fico');
-  $open = !empty($settings['condition']) ? TRUE : FALSE;
   $fieldStorage = $field_definition->getFieldStorageDefinition();
+  $settings = $plugin->getThirdPartySetting('fico', 'fico');
   $settings['entity_type'] = $form['#entity_type'];
   $settings['bundle'] = $form['#bundle'];
   $settings['field_name'] = $fieldStorage->getName();
   $settings['field_type'] = $fieldStorage->getType();
-  foreach ($fico_plugin_manager->getPlugins() as $plug) {
-    $plug['types'] = !is_array($plug['types']) ? array($plug['types']) : $plug['types'];
-    if (in_array($field_definition->getType(), $plug['types']) || in_array('all', $plug['types'])) {
-      $conditions[$plug['id']] = $plug['label'];
-      if (!empty($settings['condition']) && $plug['id'] == $settings['condition']) {
-        $formatterPlugin = $fico_plugin_manager->createInstance($plug['id']);
-        $formElements = $plug['settingsForm'] ? $formatterPlugin->formElements($settings) : [];
-      }
-    }
-  }
+
+  $element = array();
 
   $element['fico'] = [
     '#type' => 'details',
     '#title' => t('Conditions'),
-    '#open' => $open,
   ];
 
-  $element['fico']['condition'] = [
-    '#type' => 'select',
+  $context = array(
+    'instance' => $field_definition,
+    'formatter' => $plugin,
+    'settings' => $settings,
+  );
+
+  fico_condition_settings_form($element, $form_state, $context);
+
+  return $element;
+}
+
+/**
+ * Field template settings form.
+ *
+ * @param array $form
+ *   The form array.
+ * @param object $form_state
+ *   The form_state object.
+ * @param array $context
+ *   The context array.
+ */
+function fico_condition_settings_form(&$form, &$form_state, $context) {
+  $conditions = fico_field_options($context['instance']);
+  $settings = $context['settings'];
+  $default_field_function = !empty($settings['condition']) ? $settings['condition'] : NULL;
+  $key = is_array($context['instance']) ? $context['instance']['field_name'] : $context['instance']->getName();
+  $values = $form_state->getValues();
+
+  if (isset($values['fields'][$key]['settings_edit_form']['third_party_settings']['fico']['fico']['condition'])) {
+    $field_function = $values['fields'][$key]['settings_edit_form']['third_party_settings']['fico']['fico']['condition'];
+  }
+  else {
+    $field_function = $default_field_function;
+  }
+
+  $form['fico']['#open'] = $field_function ? TRUE : FALSE;
+
+  $form['fico']['condition'] = [
     '#title' => t('Condition'),
     '#empty_option' => t('- Select a condition -'),
+    '#type' => 'select',
     '#options' => $conditions,
-    '#default_value' => !empty($settings['condition']) ? $settings['condition'] : [],
-    '#ajax' => [
+    '#default_value' => $field_function ? $field_function : [],
+    '#submit' => array('fico_ajax_submit'),
+    '#ajax' => array(
       'callback' => 'fico_ajax_callback',
-      'event' => 'change',
-      'method' => 'replace',
-      'effect' => 'fade',
-      'progress' => [
-        'type' => 'throbber',
-        'message' => t('Please wait...'),
-      ],
-    ],
+      'wrapper' => 'field-display-overview-wrapper',
+    ),
   ];
 
-  $element['fico']['settings'] = [
+  $config = isset($context['settings']) ? $context['settings'] : array();
+  $formatterPlugin = $field_function ? \Drupal::service('plugin.manager.field_formatter_condition')->createInstance($field_function, $config) : NULL;
+
+  $form['fico']['settings'] = [
     '#type' => 'container',
     '#attributes' => [
       'id' => 'fico-settings',
     ],
   ];
 
-  $element['fico']['settings'] += $formElements;
-
-  return $element;
-
+  if ($formatterPlugin) {
+    $formatterPlugin->alterForm($form['fico']['settings'], $settings);
+  }
 }
 
 /**
- * AjaxCallback.
+ * Ajax handler for changing conditions.
  */
-function fico_ajax_callback(array &$form, FormStateInterface $form_state) {
-  $fico_plugin_manager = Drupal::service('plugin.manager.field_formatter_condition');
-  // Load all values.
-  $values = $form_state->getValues();
-  // Load Storage.
-  $storage = $form_state->getStorage();
-  $field_name = $storage['plugin_settings_edit'];
-  $settings = [
-    'condition' => '',
-    'settings' => [
-      'settings' => NULL,
-    ],
-    'entity_type' => $form['#entity_type'],
-    'bundle' => $form['#bundle'],
-    'field_name' => $field_name,
-    'field_type' => '',
-  ];
+function fico_ajax_callback(array $form, FormStateInterface &$form_state) {
+  return $form['fields'];
+}
 
-  if ($condition = $values['fields'][$field_name]['settings_edit_form']['third_party_settings']['fico']['fico']['condition'] && !empty($values['fields'][$field_name]['settings_edit_form']['third_party_settings']['fico']['fico']['condition'])) {
-    $condition = $values['fields'][$field_name]['settings_edit_form']['third_party_settings']['fico']['fico']['condition'];
-    $settings['condition'] = $condition;
-
-    foreach ($fico_plugin_manager->getPlugins() as $plug) {
-      $plug['types'] = !is_array($plug['types']) ? array($plug['types']) : $plug['types'];
-      if (!empty($settings['condition']) && $plug['id'] == $settings['condition']) {
-        $formatterPlugin = $fico_plugin_manager->createInstance($plug['id']);
-        $formElements = $plug['settingsForm'] ? $formatterPlugin->formElements($settings) : '';
-      }
-    }
-  }
-  else {
-    $formElements = '';
-  }
-
-  $response = new AjaxResponse();
-  $response->addCommand(new HtmlCommand(
-    '#fico-settings',
-    $formElements
-  ));
-
-  return $response;
-
+/**
+ * Form submission handler for changing conditions.
+ */
+function fico_ajax_submit(array $form, FormStateInterface &$form_state) {
+  $form_state['rebuild'] = TRUE;
 }
 
 /**
@@ -149,10 +133,24 @@ function fico_field_formatter_settings_summary_alter(&$summary, $context) {
   foreach ($fico_plugin_manager->getPlugins() as $plug) {
     $conditions[$plug['id']] = $plug['label'];
   }
-
-  $condition = $context['formatter']->getThirdPartySetting('fico', 'fico');
-  $condition = !empty($condition['condition']) ? $conditions[$condition['condition']] : t('not set');
-  $summary[] = t("Condition: %condition", ["%condition" => $condition]);
+  $settings = $context['formatter']->getThirdPartySetting('fico', 'fico');
+  $settings['view_mode'] = $context['view_mode'];
+  if (is_object($context['field_definition']) && method_exists($context['field_definition'], 'get')) {
+    $settings['field_type'] = $context['field_definition']->get('field_type');
+    $settings['field_type'] = $context['field_definition']->get('field_type');
+    $settings['field_name'] = $context['field_definition']->get('field_name');
+    $settings['entity_type'] = $context['field_definition']->get('entity_type');
+    $settings['bundle'] = $context['field_definition']->get('bundle');
+  }
+  if (!empty($settings['condition'])) {
+    $formatterPlugin = $fico_plugin_manager->createInstance($settings['condition']);
+    $summary[] = $formatterPlugin->summary($settings);
+  }
+  else {
+    $summary[] = t("Condition: %condition", [
+      "%condition" => t('not set'),
+    ]);
+  }
 }
 
 /**
@@ -188,13 +186,14 @@ function fico_entity_view_alter(array &$build, EntityInterface $entity, EntityVi
  *   The current settings array.
  */
 function fico_string_search(&$build, $field, $settings) {
-  if (!empty($settings['settings']['target_field']) || !empty($build[$settings['settings']['target_field']]['#items'])) {
-    $target = $build[$settings['settings']['target_field']]['#items'];
+  $prefix = $settings['condition'];
+  if (!empty($settings['settings'][$prefix . '_target_field']) && !empty($build[$settings['settings'][$prefix . '_target_field']]['#items'])) {
+    $target = $build[$settings['settings'][$prefix . '_target_field']]['#items'];
     $values = $target->getValue($field);
     $found = FALSE;
     $options = [
       'found' => &$found,
-      'string' => $settings['settings']['string'],
+      'string' => $settings['settings'][$prefix . '_string'],
     ];
     array_walk($values, function (&$item, $delta, $options) {
       if (!empty($item['value']) && strpos($item['value'], $options['string']) !== FALSE) {
@@ -204,4 +203,40 @@ function fico_string_search(&$build, $field, $settings) {
 
     return $found;
   }
+}
+
+/**
+ * Gets all Field Formatter Condition options.
+ *
+ * @param object $field_definition
+ *   The field definition object.
+ *
+ * @return array
+ *   List of conditions.
+ */
+function fico_field_options($field_definition) {
+  $options = array();
+  foreach (\Drupal::service('plugin.manager.field_formatter_condition')->getDefinitions() as $plugin_id => $plugin) {
+    if (in_array($field_definition->getType(), $plugin['types']) || in_array('all', $plugin['types'])) {
+      $options[$plugin_id] = $plugin['label'];
+    }
+  }
+  return $options;
+}
+
+/**
+ * Gets all allowed text format types.
+ *
+ * @return array
+ *   List of allowed text format types.
+ */
+function fico_text_types() {
+  return [
+    "text",
+    "text_long",
+    "text_with_summary",
+    "string",
+    "list_string",
+    "string_long",
+  ];
 }
