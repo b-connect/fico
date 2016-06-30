@@ -3,6 +3,7 @@
 namespace Drupal\fico\Plugin;
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\field\FieldConfigInterface;
 
 /**
  * Base class for Field formatter condition plugins.
@@ -81,16 +82,7 @@ abstract class FieldFormatterConditionBase extends PluginBase implements FieldFo
     if (!empty($entity_type) && !empty($bundle)) {
       $fields = array_filter(
         $entityManager->getFieldDefinitions($entity_type, $bundle), function ($field_definition) {
-          $class_name = explode("\\", get_class($field_definition));
-          $class_name = array_pop($class_name);
-          $class_names = [
-            'BaseFieldDefinition',
-            'BaseFieldOverride',
-            'FieldConfig',
-          ];
-          if (in_array($class_name, $class_names)) {
-            return TRUE;
-          }
+          return $field_definition instanceof FieldConfigInterface;
         }
       );
     }
