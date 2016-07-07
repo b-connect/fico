@@ -24,9 +24,15 @@ class HideNotEmpty extends FieldFormatterConditionBase {
     $options = [];
     $fields = $this->getEntityFields($settings['entity_type'], $settings['bundle']);
 
+    $not_allowed = [
+      "list_string",
+    ];
+
     foreach ($fields as $field_name => $field) {
       if ($field_name != $settings['field_name']) {
-        $options[$field_name] = $field->getLabel();
+        if (!in_array($field->getType(), $not_allowed)) {
+          $options[$field_name] = $field->getLabel();
+        }
       }
     }
 
@@ -65,8 +71,13 @@ class HideNotEmpty extends FieldFormatterConditionBase {
       }
     }
     else {
-      $entity = $build['#' . $build['#entity_type']];
-      if ($entity->get($settings['settings']['target_field'])->isEmpty()) {
+      if (isset($build['#' . $build['#entity_type']]) && is_object($build['#' . $build['#entity_type']])) {
+        $entity = $build['#' . $build['#entity_type']];
+        if (!$entity->get($settings['settings']['target_field'])->isEmpty()) {
+          $build[$field]['#access'] = FALSE;
+        }
+      }
+      else {
         $build[$field]['#access'] = FALSE;
       }
     }

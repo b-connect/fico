@@ -11,6 +11,7 @@ use Drupal\Core\Field\FormatterInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Implements hook_help().
@@ -186,20 +187,30 @@ function fico_entity_view_alter(array &$build, EntityInterface $entity, EntityVi
  *   The current settings array.
  */
 function fico_string_search(&$build, $field, $settings) {
-  $prefix = $settings['condition'];
-  if (!empty($settings['settings'][$prefix . '_target_field']) && !empty($build[$settings['settings'][$prefix . '_target_field']]['#items'])) {
-    $target = $build[$settings['settings'][$prefix . '_target_field']]['#items'];
+  if (!empty($settings['settings']['target_field']) && !empty($build[$settings['settings']['target_field']]['#items'])) {
+    $field_storage = FieldStorageConfig::loadByName($settings['entity_type'], $settings['settings']['target_field']);
+    $target = $build[$settings['settings']['target_field']]['#items'];
     $values = $target->getValue($field);
     $found = FALSE;
     $options = [
       'found' => &$found,
-      'string' => $settings['settings'][$prefix . '_string'],
+      'string' => $settings['settings']['string'],
     ];
-    array_walk($values, function (&$item, $delta, $options) {
-      if (!empty($item['value']) && strpos($item['value'], $options['string']) !== FALSE) {
-        $options['found'] = TRUE;
-      }
-    }, $options);
+    switch ($field_storage->getType()) {
+      case 'list_string':
+        $values = $field_storage->getSettings()['allowed_values'];
+        if (in_array($settings['settings']['string'], array_keys($values))) {
+          return TRUE;
+        }
+        break;
+
+      default:
+        array_walk($values, function (&$item, $delta, $options) {
+          if (!empty($item['value']) && strpos($item['value'], $options['string']) !== FALSE) {
+            $options['found'] = TRUE;
+          }
+        }, $options);
+    }
 
     return $found;
   }

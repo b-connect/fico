@@ -25,8 +25,14 @@ class HideOnRole extends FieldFormatterConditionBase {
     foreach (Role::loadMultiple() as $role) {
       $user_roles[$role->id()] = $role->label();
     }
+    $default_include = isset($settings['settings']['include_admin']) ? $settings['settings']['include_admin'] : NULL;
     $default_roles = isset($settings['settings']['roles']) ? $settings['settings']['roles'] : NULL;
 
+    $form['include_admin'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Include the administrator'),
+      '#default_value' => $default_include,
+    );
     $form['roles'] = array(
       '#type' => 'select',
       '#multiple' => TRUE,
@@ -40,7 +46,7 @@ class HideOnRole extends FieldFormatterConditionBase {
    * {@inheritdoc}
    */
   public function access(&$build, $field, $settings) {
-    if (array_intersect(\Drupal::currentUser()->getRoles(), $settings['settings']['roles']) && \Drupal::currentUser()->id() != 1) {
+    if (array_intersect(\Drupal::currentUser()->getRoles(), $settings['settings']['roles']) && (\Drupal::currentUser()->id() != 1 || $settings['settings']['include_admin'] == 1)) {
       $build[$field]['#access'] = FALSE;
     };
   }
