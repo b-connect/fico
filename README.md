@@ -11,16 +11,17 @@ Generate a plugin.
     use Drupal\fico\Plugin\FieldFormatterConditionBase;
 
     /**
-     * Description for your plugin.
-     *
-     * @FieldFormatterCondition(
-     *   id = "your_plugin_id",
-     *   label = @Translation("Your plugin name"),
-     *   types = {
-     *     "all"
-     *   }
-     * )
-     */
+      * Description for your plugin.
+      *
+      * @FieldFormatterCondition(
+      *   id = "your_plugin_id",
+      *   label = @Translation("Your plugin name"),
+      *   dsFields = TRUE,
+      *   types = {
+      *     "all"
+      *   }
+      * )
+      */
     class YourConditionName extends FieldFormatterConditionBase {
 
       /**
