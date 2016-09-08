@@ -313,12 +313,12 @@ function fico_entity_view_alter(array &$build, EntityInterface $entity, EntityVi
         // Only allow non empty fields.
         if (!empty($field_value)) {
           $pluginSettings = $field_instance->getConfiguration();
-          if ($pluginSettings['fico']['condition']) {
+          if (!empty($pluginSettings['fico']['condition'])) {
             $settings = [
               'condition' => $pluginSettings['fico']['condition'],
               'entity_type' => $entity->getEntityTypeId(),
               'bundle' => $entity->bundle(),
-              'settings' => $pluginSettings['fico']['settings'] ? $pluginSettings['fico']['settings'] : NULL,
+              'settings' => !empty($pluginSettings['fico']['settings']) ? $pluginSettings['fico']['settings'] : NULL,
               'field_name' => $key,
               'field_type' => 'ds',
             ];
@@ -326,12 +326,6 @@ function fico_entity_view_alter(array &$build, EntityInterface $entity, EntityVi
             $formatterPlugin = $fico_plugin_manager->createInstance($pluginSettings['fico']['condition']);
             $formatterPlugin->access($build, $key, $settings);
           }
-          // if($key == 'node_title') {
-          //   kint($field_instance->getConfiguration());
-          // }
-
-
-          #$build[$key]['#access'] = TRUE;
         }
       }
     }
