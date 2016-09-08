@@ -10,6 +10,7 @@ use Drupal\user\Entity\Role;
  * @FieldFormatterCondition(
  *   id = "hide_on_role",
  *   label = @Translation("Hide when current user has role"),
+ *   dsFields = TRUE,
  *   types = {
  *     "all"
  *   }

@@ -9,6 +9,7 @@ use Drupal\fico\Plugin\FieldFormatterConditionBase;
  * @FieldFormatterCondition(
  *   id = "hide_no_string",
  *   label = @Translation("Hide when target field does not contain a string"),
+ *   dsFields = TRUE,
  *   types = {
  *     "all"
  *   }

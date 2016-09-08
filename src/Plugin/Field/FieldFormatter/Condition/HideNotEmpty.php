@@ -10,6 +10,7 @@ use Drupal\field\Entity\FieldStorageConfig;
  * @FieldFormatterCondition(
  *   id = "hide_not_empty",
  *   label = @Translation("Hide when target field is not empty"),
+ *   dsFields = TRUE,
  *   types = {
  *     "all"
  *   }
@@ -49,24 +50,36 @@ class HideNotEmpty extends FieldFormatterConditionBase {
    * {@inheritdoc}
    */
   public function access(&$build, $field, $settings) {
+    #kint($settings);
     if (isset($build[$settings['settings']['target_field']]['#items'])) {
       $fields = $build[$settings['settings']['target_field']]['#items'];
       if (is_object($fields)) {
         $field_storage = FieldStorageConfig::loadByName($settings['entity_type'], $settings['settings']['target_field']);
+        $values = $fields->getValue();
         switch ($field_storage->getType()) {
           case 'comment':
-            $values = $fields->getValue();
             if ($values[0]['comment_count'] > 0) {
               $build[$field]['#access'] = FALSE;
             }
             break;
 
-          case 'boolean':
-            $values = $fields->getValue();
-            if ($values[0]['value'] == 1) {
+          case 'image':
+          case 'entity_reference':
+            if (isset($values[0]['target_id'])) {
               $build[$field]['#access'] = FALSE;
             }
             break;
+
+          case 'link':
+            if (isset($values[0]['uri'])) {
+              $build[$field]['#access'] = FALSE;
+            }
+            break;
+
+          default:
+            if (isset($values[0]['value'])) {
+              $build[$field]['#access'] = FALSE;
+            }
         }
       }
     }

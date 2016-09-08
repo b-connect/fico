@@ -9,6 +9,7 @@ use Drupal\fico\Plugin\FieldFormatterConditionBase;
  * @FieldFormatterCondition(
  *   id = "hide_on_pages",
  *   label = @Translation("Hide on specific pages"),
+ *   dsFields = FALSE,
  *   types = {
  *     "all"
  *   }

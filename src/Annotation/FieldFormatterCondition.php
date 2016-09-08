@@ -29,6 +29,13 @@ class FieldFormatterCondition extends Plugin {
   public $label;
 
   /**
+   * Show this condition on DS fields.
+   *
+   * @var bool
+   */
+  public $dsFields;
+
+  /**
    * This field formatter condition is allowed for the following field types.
    *
    * @var array

@@ -9,6 +9,7 @@ use Drupal\fico\Plugin\FieldFormatterConditionBase;
  * @FieldFormatterCondition(
  *   id = "hide_date_time",
  *   label = @Translation("Hide date/time"),
+ *   dsFields = TRUE,
  *   types = {
  *     "datetime",
  *     "date",

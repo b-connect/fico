@@ -10,6 +10,7 @@ use Drupal\user\Entity\User;
  * @FieldFormatterCondition(
  *   id = "hide_if_author",
  *   label = @Translation("Hide if content from author"),
+ *   dsFields = TRUE,
  *   types = {
  *     "all"
  *   }
@@ -20,7 +21,7 @@ class HideIfAuthor extends FieldFormatterConditionBase {
   /**
    * {@inheritdoc}
    */
-  public function alterForm(&$form, $settingss) {
+  public function alterForm(&$form, $settings) {
     if (isset($settings['settings']['author'])) {
       $user = User::load($settings['settings']['author']);
     }

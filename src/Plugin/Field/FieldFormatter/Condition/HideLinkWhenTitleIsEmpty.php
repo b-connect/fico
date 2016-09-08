@@ -9,6 +9,7 @@ use Drupal\fico\Plugin\FieldFormatterConditionBase;
  * @FieldFormatterCondition(
  *   id = "hide_link_when_title_is_empty",
  *   label = @Translation("Hide link when link title is empty"),
+ *   dsFields = TRUE,
  *   types = {
  *     "link_field",
  *     "link"
