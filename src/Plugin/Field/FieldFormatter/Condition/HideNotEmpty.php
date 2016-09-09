@@ -27,6 +27,7 @@ class HideNotEmpty extends FieldFormatterConditionBase {
 
     $not_allowed = [
       "list_string",
+      "boolean",
     ];
 
     foreach ($fields as $field_name => $field) {
