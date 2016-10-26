@@ -52,8 +52,7 @@ class HideIfBoolCheck extends FieldFormatterConditionBase {
    * {@inheritdoc}
    */
   public function access(&$build, $field, $settings) {
-    $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
-    $items = $build['#node']->getTranslation($language)->get($settings['settings']['target_field']);
+    $items = $build['#' . $build['#entity_type']]->get($settings['settings']['target_field']);
 
     foreach ($items as $key => $item) {
       $value = $item->getValue();
